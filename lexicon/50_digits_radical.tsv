@@ -1,0 +1,14 @@
+# 发音相近的偏旁部首
+# 偏旁通常只有单侧，命中率有限，权重取得比较保守。
+# 格式：token <TAB> category <TAB> value <TAB> kind <TAB> weight <TAB> note
+token	category	value	kind	weight	note
+衤	digit	1	radical	0.55	衣字旁，读 yī
+幺	digit	1	radical	0.90	读 yāo，本义就是「一」
+阝	digit	2	radical	0.55	双耳旁，读 ěr
+彡	digit	3	radical	0.60	三撇，读 shān
+巛	digit	3	radical	0.50	读 chuān，与「三」音近
+纟	digit	4	radical	0.50	绞丝旁，读 sī
+礻	digit	4	radical	0.40	示字旁，读 shì，与「四」音近
+巳	digit	4	radical	0.70	读 sì
+丷	digit	8	radical	0.60	八字头，读 bā
+罒	digit	4	radical	0.30	四字头，本义与「四」相关

@@ -1,0 +1,9 @@
+{
+  "name": "tme_link",
+  "version": "1.0.0",
+  "entry": "plugin.py",
+  "class": "TelegramLinkPlugin",
+  "enabled": true,
+  "author": "QQAdScan",
+  "description": "示例插件：识别 Telegram / 电报 / 纸飞机 引流，并往词库里补充「飞机群」等关键词"
+}

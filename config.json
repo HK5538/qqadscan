@@ -1,0 +1,61 @@
+{
+  "_说明": "QQ群广告扫描器配置。rules 取值：off=不启用；smart=只有附近没有群关键词时才排除（推荐）；always=一律排除。改完保存，在界面里点「重新载入配置」即可生效。",
+  "scan": {
+    "extensions": [".txt", ".log"],
+    "recursive": true,
+    "max_file_mb": 128,
+    "skip_hidden": true,
+    "encodings": ["utf-8-sig", "utf-8", "gb18030", "big5", "utf-16"]
+  },
+  "decode": {
+    "min_digits": 5,
+    "max_digits": 14,
+    "max_gap": 3,
+    "noise_precedence": true,
+    "chinese_numeral_place_value": true,
+    "boundary_chars": "。！？；;!?\n\r|，,、"
+  },
+  "rules": {
+    "pure_arabic": "smart",
+    "pure_chinese": "smart",
+    "quantifier": "smart",
+    "time": "smart",
+    "date": "smart",
+    "phone": "smart"
+  },
+  "score": {
+    "thresholds": { "high": 75, "medium": 50, "low": 30 },
+    "group_window": 26,
+    "ad_window": 60,
+    "weights": {
+      "length": 22.0,
+      "obfuscation": 26.0,
+      "noise": 8.0,
+      "group_keyword": 32.0,
+      "ad_keyword": 14.0,
+      "structure": 8.0,
+      "penalty_pure_arabic": 12.0,
+      "penalty_pure_chinese": 10.0,
+      "penalty_quantifier": 35.0,
+      "penalty_time": 45.0,
+      "penalty_date": 28.0,
+      "penalty_phone": 20.0
+    }
+  },
+  "output": {
+    "dir": "reports",
+    "formats": ["txt", "csv", "json"],
+    "include_low": true,
+    "max_entries": 0
+  },
+  "plugins": {
+    "enabled": true,
+    "disabled": []
+  },
+  "ui": {
+    "min_score": 0,
+    "band": "全部",
+    "max_rows": 20000,
+    "font_size": 10
+  }
+}

@@ -1,0 +1,50 @@
+# 群关键词：出现这些词说明附近可能在报群号
+# 权重 ≥ 0.7 且距离 ≤ 6 字时，会作为「有群证据」，让纯数字规则放行。
+# 格式：token <TAB> category <TAB> value <TAB> kind <TAB> weight <TAB> note
+token	category	value	kind	weight	note
+qq群	group_keyword			1.00	最直接的群关键词
+q群	group_keyword			1.00	缩写
+群号	group_keyword			1.00	明确要号码
+群号码	group_keyword			1.00	
+裙号	group_keyword			0.95	「裙」代替「群」
+君羊号	group_keyword			0.95	拆字写法
+扣扣群	group_keyword			0.95	
+加群	group_keyword			0.95	
+进群	group_keyword			0.90	
+进裙	group_keyword			0.90	
+加裙	group_keyword			0.85	
+资源群	group_keyword			0.95	
+内部群	group_keyword			0.95	
+福利群	group_keyword			0.95	
+交流群	group_keyword			0.90	
+分享群	group_keyword			0.90	
+交友群	group_keyword			0.85	
+学习群	group_keyword			0.80	
+群聊号	group_keyword			0.90	
+群组号	group_keyword			0.90	
+群id	group_keyword			0.90	
+入群	group_keyword			0.85	
+群入口	group_keyword			0.80	
+群号在	group_keyword			0.80	
+裙	group_keyword			0.80	单字「裙」几乎只出现在广告里
+qun	group_keyword			0.90	拼音 qun
+q-u-n	group_keyword			0.90	拆开写
+q.u.n	group_keyword			0.90	拆开写
+扣群	group_keyword			0.90	
+企鹅群	group_keyword			0.90	
+加扣	group_keyword			0.85	
+加q	group_keyword			0.80	
+私q	group_keyword			0.80	
+扣扣	group_keyword			0.75	
+qq	group_keyword			0.65	单独出现时权重低
+企鹅	group_keyword			0.60	
+群主	group_keyword			0.50	
+群	group_keyword			0.62	最常见也最容易误伤，权重压在证据线以下
+组织	group_keyword			0.30	黑话
+基地	group_keyword			0.30	黑话
+qq号	group_keyword			0.95	QQ 号
+qq号码	group_keyword			0.95	
+q号	group_keyword			0.85	
+扣号	group_keyword			0.85	
+扣扣号	group_keyword			0.90	
+企鹅号	group_keyword			0.80	

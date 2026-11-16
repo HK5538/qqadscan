@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: 语法检查
+        run: python -m compileall -q qqadscan launcher_gui.py launcher_cli.py tests
+      - name: 单元测试
+        run: python -m unittest discover -s tests -v
+      - name: 命令行冒烟测试
+        run: python -m qqadscan scan samples/demo.txt --formats txt,csv,json --out reports

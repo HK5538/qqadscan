@@ -1,0 +1,38 @@
+# 基础数字：半角数字与中文数字
+# 这一层是「直白写法」，不参与混淆度加分，但会被纯数字规则判断。
+# 格式：token <TAB> category <TAB> value <TAB> kind <TAB> weight <TAB> note
+token	category	value	kind	weight	note
+0	digit	0	ascii	1.00	半角阿拉伯数字
+1	digit	1	ascii	1.00	半角阿拉伯数字
+2	digit	2	ascii	1.00	半角阿拉伯数字
+3	digit	3	ascii	1.00	半角阿拉伯数字
+4	digit	4	ascii	1.00	半角阿拉伯数字
+5	digit	5	ascii	1.00	半角阿拉伯数字
+6	digit	6	ascii	1.00	半角阿拉伯数字
+7	digit	7	ascii	1.00	半角阿拉伯数字
+8	digit	8	ascii	1.00	半角阿拉伯数字
+9	digit	9	ascii	1.00	半角阿拉伯数字
+零	digit	0	cjk	1.00	中文数字
+〇	digit	0	cjk	1.00	中文数字
+一	digit	1	cjk	1.00	中文数字
+二	digit	2	cjk	1.00	中文数字
+三	digit	3	cjk	1.00	中文数字
+四	digit	4	cjk	1.00	中文数字
+五	digit	5	cjk	1.00	中文数字
+六	digit	6	cjk	1.00	中文数字
+七	digit	7	cjk	1.00	中文数字
+八	digit	8	cjk	1.00	中文数字
+九	digit	9	cjk	1.00	中文数字
+壹	digit	1	cjk_formal	0.85	大写中文数字（也常被当作伪装）
+贰	digit	2	cjk_formal	0.85	大写中文数字（也常被当作伪装）
+叁	digit	3	cjk_formal	0.85	大写中文数字（也常被当作伪装）
+肆	digit	4	cjk_formal	0.85	大写中文数字（也常被当作伪装）
+伍	digit	5	cjk_formal	0.85	大写中文数字（也常被当作伪装）
+陆	digit	6	cjk_formal	0.85	大写中文数字（也常被当作伪装）
+柒	digit	7	cjk_formal	0.85	大写中文数字（也常被当作伪装）
+捌	digit	8	cjk_formal	0.85	大写中文数字（也常被当作伪装）
+玖	digit	9	cjk_formal	0.85	大写中文数字（也常被当作伪装）
+两	digit	2	cjk	0.95	「两」= 2
+兩	digit	2	cjk	0.95	「兩」= 2
+俩	digit	2	cjk	0.90	「俩」= 2
+仨	digit	3	cjk	0.90	「仨」= 3

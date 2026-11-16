@@ -1,0 +1,16 @@
+"""QQ 群广告扫描器（QQAdScan）。
+
+一个只读的文本扫描工具：在 txt 文件里找出用「同音字 / 谐音 / 拼音 / 圈号符号 /
+形状相近符号 / 偏旁部首 / 噪音字符」伪装出来的 QQ 群号，并为每条命中给出 0-100
+的「疑似广告」评分，由用户自行决定删哪些内容。
+
+程序不会修改、删除或移动任何被扫描的文件。
+"""
+
+from __future__ import annotations
+
+__all__ = ["__version__", "APP_NAME", "APP_ID"]
+
+__version__ = "1.0.0"
+APP_NAME = "QQ群广告扫描器"
+APP_ID = "QQAdScan"

@@ -1,0 +1,20 @@
+# 形状相近的特殊符号
+# 这类映射权重都不高，因为「像」是主观判断；可以按自己遇到的情况加。
+# 格式：token <TAB> category <TAB> value <TAB> kind <TAB> weight <TAB> note
+token	category	value	kind	weight	note
+丨	digit	1	shape	0.60	一根竖线，形似 1
+亅	digit	1	shape	0.45	竖钩
+ㄧ	digit	1	shape	0.50	注音符号，形似一横
+乚	digit	1	shape	0.35	形似 1 的弯钩
+乙	digit	2	shape	0.50	形似 2
+⼄	digit	2	shape	0.50	康熙部首乙
+㇈	digit	2	shape	0.40	笔画形似 2
+彐	digit	3	shape	0.45	形似 3
+⺕	digit	3	shape	0.45	康熙部首彐
+彑	digit	3	shape	0.45	彐的变体
+∈	digit	3	shape	0.40	数学符号，形似 3（用户示例中的写法）
+亖	digit	4	shape	0.75	四横，古字「四」
+ㅁ	digit	0	shape	0.40	韩文字母，形似 0/口
+○	digit	0	shape	0.60	空心圆，形似 0
+丩	digit	9	shape	0.40	形似 9 的弯钩
+ㄥ	digit	5	shape	0.30	形似 5 的下半段

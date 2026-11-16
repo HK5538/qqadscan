@@ -1,0 +1,18 @@
+# 时间词：用于辅助判断「下午一点」「18:10」这类写法
+# 时间识别主要靠内置正则，这张表是给插件/后续扩展用的。
+# 格式：token <TAB> category <TAB> value <TAB> kind <TAB> weight <TAB> note
+token	category	value	kind	weight	note
+上午	time_word			1.00	
+下午	time_word			1.00	
+中午	time_word			1.00	
+晚上	time_word			1.00	
+凌晨	time_word			1.00	
+早上	time_word			1.00	
+傍晚	time_word			1.00	
+深夜	time_word			1.00	
+半夜	time_word			1.00	
+今晚	time_word			1.00	
+点半	time_word			1.00	
+点钟	time_word			1.00	
+小时	time_word			0.80	
+分钟	time_word			0.80	

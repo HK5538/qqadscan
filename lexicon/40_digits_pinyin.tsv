@@ -1,0 +1,57 @@
+# 数字的中文拼音（含带声调写法）
+# 拼音只在「独立成词」时生效：前后紧邻拉丁字母时不会命中，避免 sans 里匹配出 san。
+# 像 lu / ng 这种容易误伤的写法权重已调低，可自行删除。
+# 格式：token <TAB> category <TAB> value <TAB> kind <TAB> weight <TAB> note
+token	category	value	kind	weight	note
+ling	digit	0	pinyin	0.90	拼音读法 ling
+líng	digit	0	pinyin	0.95	拼音读法 líng
+ling2	digit	0	pinyin	0.90	拼音读法 ling2
+yi	digit	1	pinyin	0.90	拼音读法 yi
+yī	digit	1	pinyin	0.95	拼音读法 yī
+yí	digit	1	pinyin	0.95	拼音读法 yí
+yì	digit	1	pinyin	0.95	拼音读法 yì
+yi1	digit	1	pinyin	0.90	拼音读法 yi1
+yao	digit	1	pinyin	0.90	拼音读法 yao
+yāo	digit	1	pinyin	0.95	拼音读法 yāo
+yao1	digit	1	pinyin	0.90	拼音读法 yao1
+er	digit	2	pinyin	0.90	拼音读法 er
+èr	digit	2	pinyin	0.95	拼音读法 èr
+ér	digit	2	pinyin	0.95	拼音读法 ér
+er4	digit	2	pinyin	0.90	拼音读法 er4
+liang	digit	2	pinyin	0.90	拼音读法 liang
+liǎng	digit	2	pinyin	0.95	拼音读法 liǎng
+liang3	digit	2	pinyin	0.90	拼音读法 liang3
+san	digit	3	pinyin	0.90	拼音读法 san
+sān	digit	3	pinyin	0.95	拼音读法 sān
+sàn	digit	3	pinyin	0.95	拼音读法 sàn
+san1	digit	3	pinyin	0.90	拼音读法 san1
+sa	digit	3	pinyin	0.90	拼音读法 sa
+si	digit	4	pinyin	0.90	拼音读法 si
+sì	digit	4	pinyin	0.95	拼音读法 sì
+sī	digit	4	pinyin	0.95	拼音读法 sī
+si4	digit	4	pinyin	0.90	拼音读法 si4
+wu	digit	5	pinyin	0.90	拼音读法 wu
+wǔ	digit	5	pinyin	0.95	拼音读法 wǔ
+wú	digit	5	pinyin	0.95	拼音读法 wú
+wu3	digit	5	pinyin	0.90	拼音读法 wu3
+ng	digit	5	pinyin	0.90	拼音读法 ng
+liu	digit	6	pinyin	0.90	拼音读法 liu
+liù	digit	6	pinyin	0.95	拼音读法 liù
+liú	digit	6	pinyin	0.95	拼音读法 liú
+liu4	digit	6	pinyin	0.90	拼音读法 liu4
+lu	digit	6	pinyin	0.90	拼音读法 lu
+qi	digit	7	pinyin	0.90	拼音读法 qi
+qī	digit	7	pinyin	0.95	拼音读法 qī
+qí	digit	7	pinyin	0.95	拼音读法 qí
+qì	digit	7	pinyin	0.95	拼音读法 qì
+qi1	digit	7	pinyin	0.90	拼音读法 qi1
+ba	digit	8	pinyin	0.90	拼音读法 ba
+bā	digit	8	pinyin	0.95	拼音读法 bā
+bá	digit	8	pinyin	0.95	拼音读法 bá
+bà	digit	8	pinyin	0.95	拼音读法 bà
+ba1	digit	8	pinyin	0.90	拼音读法 ba1
+jiu	digit	9	pinyin	0.90	拼音读法 jiu
+jiǔ	digit	9	pinyin	0.95	拼音读法 jiǔ
+jiù	digit	9	pinyin	0.95	拼音读法 jiù
+jiu3	digit	9	pinyin	0.90	拼音读法 jiu3
+jiou	digit	9	pinyin	0.90	拼音读法 jiou
