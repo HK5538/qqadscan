@@ -3,7 +3,7 @@
 用法示例::
 
     python -m qqadscan                       # 打开图形界面
-    python -m qqadscan scan D:\\logs          # 扫描目录
+    python -m qqadscan scan ./logs          # 扫描目录
     python -m qqadscan scan a.txt --min-score 50 --formats txt,csv
     python -m qqadscan decode "㈡〔〔氿▲4⊥〖婈４□（叁5〓>⒍思蒐←索≌q羣："
     python -m qqadscan lexicon               # 查看词库统计
@@ -168,7 +168,7 @@ def cmd_lexicon(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="qqadscan",
-        description=f"{APP_NAME} —— 只读扫描 txt 中的伪装 QQ 群广告并评分",
+        description=f"{APP_NAME} —— 扫描 txt 中的伪装 QQ 群广告并评分（扫描只读）",
     )
     parser.add_argument("--version", action="version", version=f"{APP_NAME} {__version__}")
     sub = parser.add_subparsers(dest="command")
@@ -230,7 +230,7 @@ def main(argv: list[str] | None = None) -> int:
             from .gui.app import run_gui
         except Exception as exc:  # noqa: BLE001 - 例如精简版 Python 没有 tkinter
             print(f"无法加载图形界面（{exc}）。", file=sys.stderr)
-            print("可以改用命令行，例如：python -m qqadscan scan D:\\logs", file=sys.stderr)
+            print("可以改用命令行，例如：python -m qqadscan scan ./logs", file=sys.stderr)
             return 1
         return run_gui()
     parser = build_parser()

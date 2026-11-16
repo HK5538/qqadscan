@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from ..config import Config
 from .decoder import Candidate, OBFUSCATED_KIND_ORDER
@@ -115,6 +116,8 @@ class ScoredCandidate:
     band: str
     reasons: list[Reason] = field(default_factory=list)
     plugin_notes: list[str] = field(default_factory=list)
+    source_path: Path | None = None
+    source_encoding: str = ""
 
     # ---- 代理属性 ----------------------------------------------------
     @property

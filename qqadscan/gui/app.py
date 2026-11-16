@@ -1,7 +1,8 @@
 """主窗口。
 
 设计原则：
-* 只读——程序不会修改/删除任何被扫描的文件，只生成报告；
+* 默认只读——扫描和评分不碰原文件；只有你点「输出清理后的文件」才会写出副本，
+  覆盖原文件需要显式勾选并自动生成 .bak 备份；
 * 结果按分数排序，每一分都能在详情里看到依据；
 * 扫描在后台线程进行，界面不卡。
 """
@@ -20,12 +21,14 @@ from tkinter import filedialog, messagebox, ttk
 
 from .. import APP_NAME, __version__
 from ..config import Config
+from ..core.cleaning import DEFAULT_SUFFIX, build_plan, run_plan
 from ..core.lexicon import Lexicon
 from ..core.report import write_reports
 from ..core.scanner import ProgressEvent, ScanOptions, ScanResult, Scanner
-from ..paths import get_paths
+from ..paths import display_path, get_paths, relative_path
 from ..plugins.loader import PluginManager
 from . import theme
+from .dialogs import CleanExportDialog
 from .settings import SettingsDialog
 from .widgets import DetailView, HelpWindow
 
@@ -56,7 +59,7 @@ class ScanApp(tk.Tk):
         self.fonts = theme.Fonts()
         theme.apply_theme(self, self.fonts)
 
-        self.title(f"{APP_NAME} v{__version__}  ——  只读扫描，不会删除任何文件")
+        self.title(f"{APP_NAME} v{__version__}  ——  扫描只读，删除需你确认")
         self._apply_geometry()
         self.minsize(900, 600)
         self.configure(background=theme.BG)
@@ -70,6 +73,9 @@ class ScanApp(tk.Tk):
         self.result: ScanResult | None = None
         self.visible_entries: list = []
         self.entry_by_iid: dict[str, object] = {}
+        # 已标记删除的行：key = (文件绝对路径, 行号)
+        self.deleted_keys: set[tuple[str, int]] = set()
+        self.deleted_entries: list = []
         self.queue: "queue.Queue[tuple]" = queue.Queue()
         self.stop_event = threading.Event()
         self.worker: threading.Thread | None = None
@@ -232,6 +238,30 @@ class ScanApp(tk.Tk):
             filter_row, text="重新载入配置与词库", command=self._reload_all
         ).pack(side="right")
 
+        # 操作栏：多选删除 + 输出清理后的文件
+        action_row = ttk.Frame(outer)
+        action_row.pack(fill="x", pady=(8, 0))
+        self.selection_var = tk.StringVar(value="未选中条目（Ctrl/Shift 可多选）")
+        ttk.Label(action_row, textvariable=self.selection_var, style="Muted.TLabel").pack(side="left")
+
+        self.delete_button = ttk.Button(
+            action_row, text="删除选中", command=self._delete_selected, state="disabled"
+        )
+        self.delete_button.pack(side="left", padx=(12, 0))
+        self.undo_button = ttk.Button(
+            action_row, text="撤销删除", command=self._undo_delete, state="disabled"
+        )
+        self.undo_button.pack(side="left", padx=(6, 0))
+        self.output_button = ttk.Button(
+            action_row, text="输出清理后的文件", command=self._export_clean, state="disabled"
+        )
+        self.output_button.pack(side="left", padx=(6, 0))
+
+        self.deleted_var = tk.StringVar(value="")
+        ttk.Label(action_row, textvariable=self.deleted_var, foreground="#b91c1c").pack(
+            side="left", padx=(12, 0)
+        )
+
     def _build_body(self) -> None:
         container = ttk.Frame(self, padding=(14, 6, 14, 6))
         container.pack(fill="both", expand=True)
@@ -245,7 +275,7 @@ class ScanApp(tk.Tk):
             table_frame,
             columns=[column[0] for column in COLUMNS],
             show="headings",
-            selectmode="browse",
+            selectmode="extended",
             height=14,
         )
         for key, title, width, anchor in COLUMNS:
@@ -266,6 +296,8 @@ class ScanApp(tk.Tk):
 
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
         self.tree.bind("<Double-1>", self._on_double_click)
+        self.tree.bind("<Delete>", lambda _event: self._delete_selected())
+        self.tree.bind("<Control-a>", self._select_all_rows)
         self._build_context_menu()
 
         # 详情
@@ -290,6 +322,9 @@ class ScanApp(tk.Tk):
 
     def _build_context_menu(self) -> None:
         self.context_menu = tk.Menu(self, tearoff=0)
+        self.context_menu.add_command(label="删除选中行（Del）", command=self._delete_selected)
+        self.context_menu.add_command(label="撤销全部删除", command=self._undo_delete)
+        self.context_menu.add_separator()
         self.context_menu.add_command(label="复制原文", command=lambda: self._copy("text"))
         self.context_menu.add_command(label="复制解密号码", command=lambda: self._copy("digits"))
         self.context_menu.add_command(label="复制「文件:行号」", command=lambda: self._copy("location"))
@@ -299,10 +334,19 @@ class ScanApp(tk.Tk):
         def popup(event):
             iid = self.tree.identify_row(event.y)
             if iid:
-                self.tree.selection_set(iid)
+                if iid not in self.tree.selection():
+                    self.tree.selection_set(iid)
                 self.context_menu.tk_popup(event.x_root, event.y_root)
 
         self.tree.bind("<Button-3>", popup)
+
+    def _select_all_rows(self, _event=None):
+        children = self.tree.get_children()
+        if children:
+            self.tree.selection_set(children)
+            self.tree.focus(children[0])
+            self._on_select()
+        return "break"
 
     def _build_status(self) -> None:
         bar = ttk.Frame(self, padding=(14, 4, 14, 8))
@@ -344,8 +388,9 @@ class ScanApp(tk.Tk):
     def _append_paths(self, paths: list[str]) -> None:
         current = [item.strip() for item in self.path_var.get().split(";") if item.strip()]
         for path in paths:
-            if path and path not in current:
-                current.append(path)
+            shown = display_path(path)
+            if path and shown not in current:
+                current.append(shown)
         self.path_var.set(" ; ".join(current))
 
     def _choose_files(self) -> None:
@@ -376,10 +421,14 @@ class ScanApp(tk.Tk):
         if not paths:
             messagebox.showwarning("没有可扫描的路径", "请先选择 txt 文件或文件夹。", parent=self)
             return
-        self.path_var.set(" ; ".join(str(path) for path in paths))
+        self.path_var.set(" ; ".join(display_path(path) for path in paths))
 
         self.stop_event.clear()
         self.result = None
+        # 新一轮扫描，旧的删除标记已失效
+        self.deleted_keys.clear()
+        self.deleted_entries.clear()
+        self._update_deleted_ui()
         self.tree.delete(*self.tree.get_children())
         self.entry_by_iid.clear()
         self.detail._empty()
@@ -505,6 +554,8 @@ class ScanApp(tk.Tk):
                 continue
             if only_group and not entry.group_tokens:
                 continue
+            if self._entry_key(entry) in self.deleted_keys:
+                continue
             if keyword:
                 haystack = " ".join(
                     [
@@ -519,6 +570,7 @@ class ScanApp(tk.Tk):
                     continue
             entries.append(entry)
         self.visible_entries = self._sorted(entries)
+        self._update_deleted_ui()
         self._render()
 
     def _sort_by(self, column: str) -> None:
@@ -614,11 +666,125 @@ class ScanApp(tk.Tk):
 
     def _on_select(self, _event=None) -> None:
         selection = self.tree.selection()
+        total = len(self.entry_by_iid)
         if not selection:
+            self.selection_var.set(f"未选中条目（共 {total} 条，Ctrl/Shift 可多选）")
+            self.delete_button.configure(state="disabled")
             return
+        self.selection_var.set(f"已选 {len(selection)} 条 / 共 {total} 条")
+        self.delete_button.configure(state="normal")
         entry = self.entry_by_iid.get(selection[0])
         if entry is not None:
             self.detail.show(entry)
+
+    # ------------------------------------------------------------------
+    # 删除 / 撤销 / 输出
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _entry_key(entry) -> tuple[str, int]:
+        source = entry.source_path or entry.candidate.file
+        try:
+            source = str(Path(source).resolve())
+        except OSError:
+            source = str(source)
+        return (os.path.normcase(source), int(entry.line_no))
+
+    def _update_deleted_ui(self) -> None:
+        count = len(self.deleted_entries)
+        self.undo_button.configure(state="normal" if count else "disabled")
+        self.output_button.configure(state="normal" if count else "disabled")
+        self.deleted_var.set(f"待删除 {count} 行（尚未写入文件）" if count else "")
+
+    def _delete_selected(self) -> None:
+        selection = self.tree.selection()
+        entries = [self.entry_by_iid[iid] for iid in selection if iid in self.entry_by_iid]
+        if not entries:
+            return
+        added = 0
+        for entry in entries:
+            key = self._entry_key(entry)
+            if key in self.deleted_keys:
+                continue
+            self.deleted_keys.add(key)
+            self.deleted_entries.append(entry)
+            added += 1
+        if not added:
+            return
+        self._apply_filters()
+        self._set_status(
+            f"已标记删除 {added} 条（累计 {len(self.deleted_entries)} 行，尚未写入文件）；"
+            "点「输出清理后的文件」生成副本"
+        )
+
+    def _undo_delete(self) -> None:
+        if not self.deleted_entries:
+            return
+        count = len(self.deleted_entries)
+        self.deleted_keys.clear()
+        self.deleted_entries.clear()
+        self._apply_filters()
+        self._set_status(f"已撤销 {count} 行的删除标记")
+
+    def _export_clean(self) -> None:
+        if not self.deleted_entries:
+            messagebox.showinfo("没有待删除的行", "先在列表里选中条目并点「删除选中」。", parent=self)
+            return
+        plan = build_plan(self.deleted_entries)
+        if plan.empty():
+            messagebox.showwarning("无法定位原文件", "这些条目缺少源文件路径，无法生成副本。", parent=self)
+            return
+
+        dialog = CleanExportDialog(
+            self,
+            default_dir=self.paths.root / "output",
+            suffix=DEFAULT_SUFFIX,
+            count=plan.total_lines,
+            files=plan.total_files,
+        )
+        self.wait_window(dialog)
+        options = dialog.result
+        if not options:
+            return
+
+        outcomes = run_plan(
+            plan,
+            options["out_dir"],
+            suffix=options["suffix"],
+            overwrite=options["overwrite"],
+            backup=True,
+        )
+        ok = [item for item in outcomes if item.ok]
+        failed = [item for item in outcomes if not item.ok]
+        removed = sum(item.removed for item in ok)
+
+        lines = [f"已处理 {len(ok)} 个文件，删除 {removed} 行。"]
+        for item in ok[:8]:
+            lines.append(f"  {relative_path(item.target)}")
+            if item.backup is not None:
+                lines.append(f"    备份：{relative_path(item.backup)}")
+        if failed:
+            lines.append("")
+            lines.append("失败：")
+            for item in failed[:6]:
+                lines.append(f"  {item.source.name}：{item.error}")
+        target_dir = Path(options["out_dir"])
+        if options["overwrite"] and ok:
+            target_dir = ok[0].target.parent
+            lines.append("")
+            lines.append("原文件已被覆盖（已生成 .bak 备份），接下来会重新扫描。")
+
+        self._set_status(f"输出完成：{len(ok)} 个文件，删除 {removed} 行")
+        if failed and not ok:
+            messagebox.showerror("输出失败", "\n".join(lines), parent=self)
+            return
+        if messagebox.askyesno("输出完成", "\n".join(lines) + "\n\n是否打开输出目录？", parent=self):
+            self._open_folder(target_dir)
+
+        if options["overwrite"]:
+            self.deleted_keys.clear()
+            self.deleted_entries.clear()
+            self._update_deleted_ui()
+            self.after(250, self._start_scan)
 
     # ==================================================================
     # 右键 / 双击
@@ -731,9 +897,10 @@ class ScanApp(tk.Tk):
         messagebox.showinfo(
             "关于",
             f"{APP_NAME} v{__version__}\n\n"
-            "只读扫描 txt 文件，识别用同音字、谐音、拼音、圈号符号、\n"
+            "扫描 txt 文件，识别用同音字、谐音、拼音、圈号符号、\n"
             "形近符号、偏旁部首伪装的 QQ 群号，并给出 0-100 的疑似广告评分。\n\n"
-            "程序不会删除、修改或移动任何被扫描的文件。\n\n"
+            "扫描过程只读；标记删除后由你点「输出清理后的文件」才写出副本，\n"
+            "覆盖原文件需显式勾选并自动生成 .bak 备份。\n\n"
             f"词库目录：{self.paths.lexicon}\n"
             f"插件目录：{self.paths.plugins}\n"
             "许可证：MIT",

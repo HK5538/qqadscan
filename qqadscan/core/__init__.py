@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .cleaning import CleanOutcome, CleanPlan, build_plan, clean_file, run_plan
 from .decoder import Atom, Candidate, decode_line, decode_text
 from .lexicon import DigitToken, Keyword, Lexicon
 from .scanner import ScanOptions, ScanResult, Scanner, collect_files
@@ -10,6 +11,11 @@ from .rules import RuleEngine, RuleEvaluation, RuleHit
 
 __all__ = [
     "Atom",
+    "CleanOutcome",
+    "CleanPlan",
+    "build_plan",
+    "clean_file",
+    "run_plan",
     "Candidate",
     "decode_line",
     "decode_text",

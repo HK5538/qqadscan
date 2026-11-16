@@ -3,7 +3,9 @@
 在 txt 里找出**用同音字、谐音、拼音、圈号符号、形近符号、偏旁部首伪装的 QQ 群号**，
 逐条还原号码、给出 0–100 的「疑似广告」评分，由你自己决定删哪几条。
 
-**程序只读**：不删除、不修改、不移动任何被扫描的文件，只负责找出来和排序。
+**扫描只读，删除由你决定**：扫描和评分不会碰原文件；你在列表里勾选条目后，
+点「删除选中」只是做标记，再点「输出清理后的文件」才会生成副本。
+默认写到 `output/`，只有显式勾选「覆盖原文件」才会改动原文（自动留 `.bak` 备份）。
 
 ```
 原文：㈡〔〔氿▲4⊥〖婈４□（叁5〓>⒍思蒐←索≌q羣：
@@ -20,6 +22,7 @@
 - [它认得出哪些伪装](#它认得出哪些伪装)
 - [快速开始](#快速开始)
 - [界面](#界面)
+- [删除与输出](#删除与输出)
 - [评分是怎么来的](#评分是怎么来的)
 - [排除规则：别把价格和时间当广告](#排除规则别把价格和时间当广告)
 - [改词库：加一个映射 / 删一个映射](#改词库加一个映射--删一个映射)
@@ -100,8 +103,8 @@ python -m qqadscan
 命令行扫描：
 
 ```bat
-python -m qqadscan scan D:\logs\chat.txt
-python -m qqadscan scan D:\logs --min-score 50 --formats txt,csv
+python -m qqadscan scan .\logs\chat.txt
+python -m qqadscan scan .\logs --min-score 50 --formats txt,csv
 ```
 
 程序没有任何第三方依赖。
@@ -114,10 +117,37 @@ python -m qqadscan scan D:\logs --min-score 50 --formats txt,csv
 - 中间表格按分数从高到低排列，显示解密号码、群关键词、文件、行号、原文片段；
 - 下方详情面板给出：解密号码、原文（号码高亮）、**逐字解码过程**、**每一分是怎么加的**；
 - 「最低分数 / 等级 / 只看有群关键词的 / 搜索」四个筛选可以随意组合；
-- 选中一行右键：复制原文、复制号码、复制「文件:行号」、在资源管理器中定位；
-- 「导出当前结果」会把当前筛选后的条目写成 txt / csv / json 三种报告。
+- 表格支持**多选**：`Ctrl+单击` 点选、`Shift+单击` 连选、`Ctrl+A` 全选；
+- 选中后点「删除选中」（或按 `Delete`）只是**打标记**，不会立刻动文件，可随时「撤销删除」；
+- 点「输出清理后的文件」才真正写出结果，默认写到 `output/`，文件名加 `_已清理`；
+- 右键菜单：删除选中行 / 撤销全部删除 / 复制原文 / 复制号码 / 复制「文件:行号」/ 在资源管理器中定位；
+- 「导出当前结果」会把当前筛选后的条目写成 txt / csv / json 三种报告（不含删除动作）。
 
-快捷键：`Ctrl+O` 选文件、`Ctrl+Shift+O` 选文件夹、`Ctrl+E` 导出、`F5` 重新载入配置与词库、`Esc` 取消扫描。
+快捷键：`Ctrl+O` 选文件、`Ctrl+Shift+O` 选文件夹、`Ctrl+E` 导出、`Delete` 删除选中、`Ctrl+A` 全选、`F5` 重新载入配置与词库、`Esc` 取消扫描。
+
+---
+
+## 删除与输出
+
+删除分两步，**原文件默认不会被改动**：
+
+1. **标记**：选中一条或多条 → 「删除选中」（`Delete`）。条目从列表消失，但只是记在内存里，
+   顶部会显示「待删除 N 行（尚未写入文件）」，点「撤销删除」可全部恢复。
+2. **输出**：「输出清理后的文件」→ 选择输出目录与后缀 → 生成清理后的副本。
+
+规则：
+
+| 项 | 行为 |
+| --- | --- |
+| 默认输出位置 | 程序目录下的 `output/`，保持原有的子目录结构 |
+| 文件名 | `原名_已清理.txt`，重名自动加 `_2`、`_3` |
+| 编码 / 换行 | 按原文件编码（UTF-8 / GBK / GB18030…）和换行风格原样保留 |
+| 删除记录 | 输出目录里生成 `_删除记录.txt`，逐条列出删掉的行、分数、号码、原文 |
+| 覆盖原文件 | **默认关闭**；勾选后会先在同一目录生成 `.bak` 备份，再写回，随后自动重新扫描 |
+| 失败处理 | 单个文件失败不影响其它文件，失败原因会显示在结果里，原文件保持不动 |
+
+> 一个行号只对应一条源文件记录：同一行里有多个号码时，删任意一条都会删掉整行——
+> 这是文本编辑器的常规行为，输出前可以用「_删除记录.txt」核对。
 
 ---
 
@@ -144,7 +174,7 @@ python -m qqadscan scan D:\logs --min-score 50 --formats txt,csv
 | C 关注 | ≥ 30 | 有部分特征，可能是误伤 |
 | D 低 | < 30 | 基本可以忽略 |
 
-阈值都可以在设置里改。**分数只是排序建议，程序不会替你删任何东西。**
+阈值都可以在设置里改。**分数只是排序建议：删不删、删哪几条，始终由你决定。**
 
 ---
 
@@ -251,13 +281,13 @@ PLUGIN = MyPlugin()
 
 ```bat
 :: 扫描（默认生成 txt + csv + json 三份报告）
-python -m qqadscan scan D:\logs
+python -m qqadscan scan .\logs
 
 :: 只要 50 分以上，只出 txt
 python -m qqadscan scan chat.txt --min-score 50 --formats txt
 
 :: 不递归、不用插件
-python -m qqadscan scan D:\logs --no-recursive --no-plugins
+python -m qqadscan scan .\logs --no-recursive --no-plugins
 
 :: 解码一行看看效果
 python -m qqadscan decode "㈡〔〔氿▲4⊥〖婈４□（叁5〓>⒍思蒐←索≌q羣："
@@ -317,14 +347,17 @@ tools\build_exe.bat
 
 ```
 qqadscan/                 程序主体（纯标准库）
-  core/                   词库、解码、规则、评分、扫描、报告
-  gui/                    tkinter 界面
+  core/                   词库、解码、规则、评分、扫描、报告、删除输出
+  gui/                    tkinter 界面（主窗口、设置、导出对话框、详情面板）
   plugins/                插件 API、加载器、内置插件
 lexicon/                  可编辑词库（11 个 TSV）
 plugins/tme_link/         外置插件示例
 samples/demo.txt          演示样本（含正常聊天、价格、时间、各种伪装广告）
-tests/test_core.py        31 个单元测试
-tools/                    符号词库生成器、打包脚本
+tests/                    单元测试（核心逻辑 + 删除输出，42 个）
+tools/                    图标生成、符号词库生成、打包脚本
+assets/app.ico            程序图标
+output/                   默认的「清理后文件」输出目录（不纳入 git）
+reports/                  扫描报告（不纳入 git）
 config.json               配置
 启动程序.bat               双击启动图形界面
 命令行扫描.bat             拖文件进去就能扫
@@ -339,7 +372,8 @@ python -m unittest discover -s tests -v
 ```
 
 测试覆盖：中文数字换算、符号/同音/拼音解码、词库覆盖与删除、六条排除规则、
-评分分档、插件加载与隔离、编码回退（GBK 文件）、报告导出。
+评分分档、插件加载与隔离、编码回退（GBK 文件）、报告导出，以及删除/输出
+（保留 BOM 与 CRLF、GBK 编码、.bak 备份、相对目录结构、删除记录）。
 
 代码风格：标准库优先、类型标注、每个模块一个职责。
 
@@ -347,21 +381,16 @@ python -m unittest discover -s tests -v
 
 ## 同步到 GitHub
 
-这个目录已经是一个提交好的 git 仓库（分支 `main`），推送只差一个远程地址：
+仓库地址：<https://github.com/HK5538/qqadscan>（分支 `main`）。日常更新：
 
-1. 打开 <https://github.com/new> 新建一个**空仓库**（不要勾选 README / .gitignore），
-   例如叫 `qqadscan`；
-2. 双击 **`同步到GitHub.bat`**，粘贴仓库地址（如
-   `https://github.com/你的用户名/qqadscan.git`），按提示登录；
-3. 完成后 GitHub Actions 会自动跑测试，打 `v1.0.0` 标签还会自动构建 exe 并发布 Release。
-
-手动推送：
-
-```bat
-git remote add origin https://github.com/你的用户名/qqadscan.git
-git branch -M main
-git push -u origin main
+```bash
+git add -A
+git commit -m "feat: 说明这次改了什么"
+git pull --rebase
+git push
 ```
+
+每次 push 会触发 GitHub Actions 跑测试；打 `v1.0.0` 之类的标签还会自动构建 exe 并发布 Release。
 
 ---
 
@@ -371,7 +400,9 @@ git push -u origin main
 - 词库是「经验规则」，不可能 100%，冷门写法需要自己加词条；
 - 同音字太激进会误伤正常中文，所以权重分档 + 最少 5 位 + 群关键词证据三重限制；
 - 群号长度按 5–14 位处理，超长数字串（订单号、时间戳）默认不报；
-- 扫描大文件时界面会持续显示进度，可随时取消。
+- 扫描大文件时界面会持续显示进度，可随时取消；
+- 删除是按**整行**处理的：一行里若混着正常内容，会一起删掉，输出前请核对 `_删除记录.txt`；
+- 覆盖原文件属于不可逆操作（虽有 `.bak`），建议先输出到 `output/` 比对无误后再覆盖。
 
 ---
 

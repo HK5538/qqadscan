@@ -54,7 +54,7 @@ def _header_lines(result: ScanResult) -> list[str]:
     for note in result.plugin_notes:
         lines.append(f"插件说明 : {note}")
     lines.append("")
-    lines.append("※ 本程序只读扫描，不会删除或修改任何文件；请根据评分自行核对处理。")
+    lines.append("※ 扫描过程只读；删除需要用户在界面里手动标记并输出，不会自动改动原文件。")
     if result.cancelled:
         lines.append("※ 本次扫描被用户中途取消，结果可能不完整。")
     if result.errors:

@@ -48,7 +48,11 @@ def decode_bytes(raw: bytes, encodings: tuple[str, ...] = DEFAULT_ENCODINGS) -> 
             pass
 
     tried: list[str] = []
-    ordered = [enc for enc in encodings if enc.lower() not in {"utf-16", "utf-32"}]
+    # 没有 BOM 的文件不要用 utf-8-sig 解码，否则写回时会凭空多出一个 BOM
+    skip = {"utf-16", "utf-32"}
+    if not raw.startswith(codecs.BOM_UTF8):
+        skip.add("utf-8-sig")
+    ordered = [enc for enc in encodings if enc.lower() not in skip]
     ordered += [enc for enc in _LAST_RESORT if enc not in ordered]
     for encoding in ordered:
         if encoding in tried:

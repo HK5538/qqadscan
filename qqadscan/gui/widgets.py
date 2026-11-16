@@ -162,7 +162,7 @@ class HelpWindow(tk.Toplevel):
   · 电话：手机号 / 座机号
 每一项都有三档：off 不启用 / smart 只有附近没有群关键词时才排除 / always 一律排除。
 
-程序不会删除或修改任何被扫描的文件。
+扫描不会改动原文件；删除需要你手动标记，再由「输出清理后的文件」写出副本。
 """
 
     def __init__(self, master: tk.Misc, fonts: theme.Fonts) -> None:

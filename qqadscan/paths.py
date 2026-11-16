@@ -6,8 +6,8 @@
   源码运行时就是项目根目录。
 * ``app_dir()``     —— 程序所在目录（exe 所在目录 / 源码根目录），用户的词库、
   配置、插件、报告都放在这里，方便直接编辑。
-* ``data_root()``   —— 真正可写的数据根目录。如果 ``app_dir()`` 不可写（例如放在
-  ``C:\\Program Files`` 下），自动退回到 ``%APPDATA%\\QQAdScan``。
+* ``data_root()``   —— 真正可写的数据根目录。如果 ``app_dir()`` 不可写（例如装在
+  需要管理员权限的系统目录里），自动退回到 ``%APPDATA%`` 下的用户目录。
 """
 
 from __future__ import annotations
@@ -150,3 +150,31 @@ def default_config_candidates() -> list[Path]:
 def default_lexicon_dirs() -> list[Path]:
     """词库候选目录：程序目录优先，打包资源目录兜底。"""
     return [data_root() / LEXICON_DIRNAME, bundle_dir() / LEXICON_DIRNAME]
+
+
+def relative_path(path: "str | Path", base: "str | Path | None" = None) -> str:
+    """尽量把路径转成相对路径（默认相对当前工作目录）。
+
+    报告、配置、删除记录里都存相对路径，整个目录可以随意搬动。
+    跨盘等确实无法相对的情况才原样返回。
+    """
+    try:
+        target = Path(path).resolve()
+        start = Path(base).resolve() if base is not None else Path.cwd()
+        return os.path.relpath(str(target), str(start))
+    except (ValueError, OSError):
+        return str(path)
+
+
+def display_path(path: "str | Path", base: "str | Path | None" = None) -> str:
+    """界面展示用：在基准目录内就显示相对路径，否则保持原样。
+
+    这样默认就在程序目录下工作时，界面上不会出现一长串本机绝对路径。
+    """
+    original = str(path)
+    try:
+        target = Path(path).resolve()
+        start = Path(base).resolve() if base is not None else Path.cwd()
+        return str(target.relative_to(start))
+    except (ValueError, OSError):
+        return original

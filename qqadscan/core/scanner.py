@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Callable, Iterable
 
 from ..config import Config
+from ..paths import relative_path
 from ..plugins.loader import PluginManager
 from .decoder import decode_line
 from .lexicon import Lexicon
@@ -181,7 +182,7 @@ class Scanner:
         progress: ProgressCallback | None = None,
         should_stop: StopCallback | None = None,
     ) -> ScanResult:
-        result = ScanResult(roots=[str(p) for p in options.paths])
+        result = ScanResult(roots=[relative_path(p) for p in options.paths])
         result.lexicon_stats = self.lexicon.stats()
         result.config_warnings = list(self.config.warnings)
 
@@ -263,7 +264,13 @@ class Scanner:
                     break
                 try:
                     entries = self._scan_line(
-                        line, line_no, display, best, options.min_score
+                        line,
+                        line_no,
+                        display,
+                        path,
+                        info.encoding,
+                        best,
+                        options.min_score,
                     )
                     hits += entries
                 except Exception as exc:  # noqa: BLE001 - 单行失败不影响整体
@@ -324,6 +331,8 @@ class Scanner:
         line: str,
         line_no: int,
         display: str,
+        source_path: Path,
+        encoding: str,
         best: dict[tuple, ScoredCandidate],
         min_score: int,
     ) -> int:
@@ -381,6 +390,8 @@ class Scanner:
                 band=score.band,
                 reasons=score.reasons,
                 plugin_notes=[reason.label for reason in extra],
+                source_path=source_path,
+                source_encoding=encoding,
             )
             key = (candidate.file, candidate.line_no, candidate.digits, candidate.start)
             previous = best.get(key)
