@@ -663,6 +663,17 @@ class ScanApp(tk.Tk):
                 self.tree.selection_set(children[0])
                 self.tree.focus(children[0])
                 self._on_select()
+            # 布局完成后再校正一次滚动位置，避免前几行被藏在视口上方
+            self.after(60, self._scroll_to_top)
+
+    def _scroll_to_top(self) -> None:
+        try:
+            children = self.tree.get_children()
+            if children:
+                self.tree.see(children[0])
+            self.tree.yview_moveto(0)
+        except tk.TclError:
+            pass
 
     def _on_select(self, _event=None) -> None:
         selection = self.tree.selection()
