@@ -9,6 +9,13 @@ echo.
 echo 第 1 步：先到 https://github.com/new 新建一个空仓库
 echo          不要勾选 Add a README / .gitignore，仓库名建议 qqadscan
 echo.
+
+choice /c YN /n /m "现在打开新建仓库页面？(Y/N) "
+if errorlevel 2 goto :skip_browser
+start "" "https://github.com/new"
+
+:skip_browser
+echo.
 echo 第 2 步：把仓库地址粘贴到下面，例如
 echo          https://github.com/你的用户名/qqadscan.git
 echo.
