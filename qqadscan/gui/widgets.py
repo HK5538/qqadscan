@@ -28,6 +28,7 @@ class DetailView(ttk.Frame):
             spacing1=2,
             spacing3=4,
             cursor="arrow",
+            height=14,
         )
         scroll = ttk.Scrollbar(self, orient="vertical", command=self.text.yview)
         self.text.configure(yscrollcommand=scroll.set)

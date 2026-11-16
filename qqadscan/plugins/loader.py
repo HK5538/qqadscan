@@ -90,14 +90,21 @@ class PluginManager:
     # ------------------------------------------------------------------
     def _iter_builtin(self):
         package = importlib.import_module("qqadscan.plugins.builtin")
-        for info in pkgutil.iter_modules(package.__path__):
-            if info.name.startswith("_"):
+        names = list(getattr(package, "BUILTIN_PLUGIN_MODULES", ()))
+        if not names:
+            names = [
+                info.name
+                for info in pkgutil.iter_modules(package.__path__)
+                if not info.name.startswith("_")
+            ]
+        for name in names:
+            if name.startswith("_"):
                 continue
-            module_name = f"{package.__name__}.{info.name}"
+            module_name = f"{package.__name__}.{name}"
             try:
                 module = importlib.import_module(module_name)
             except Exception as exc:  # noqa: BLE001
-                self.errors.append(f"内置插件 {info.name} 导入失败：{exc}")
+                self.errors.append(f"内置插件 {name} 导入失败：{exc}")
                 continue
             plugin = self._instantiate(module)
             if plugin:

@@ -49,9 +49,10 @@ COLUMNS = (
 
 
 class ScanApp(tk.Tk):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, initial_paths: list[str] | None = None) -> None:
+        # 必须在创建窗口之前声明 DPI 感知，否则 125%/150% 缩放下窗口会比屏幕还高
         theme.enable_dpi_awareness()
+        super().__init__()
         self.fonts = theme.Fonts()
         theme.apply_theme(self, self.fonts)
 
@@ -59,6 +60,9 @@ class ScanApp(tk.Tk):
         self._apply_geometry()
         self.minsize(900, 600)
         self.configure(background=theme.BG)
+        self._set_window_icon()
+
+        self._initial_paths = [str(item) for item in (initial_paths or []) if str(item).strip()]
 
         self.paths = get_paths()
         self.config_obj = Config.load(self.paths.config)
@@ -75,8 +79,9 @@ class ScanApp(tk.Tk):
 
         self._build_menu()
         self._build_toolbar()
-        self._build_body()
+        # 状态栏必须先 pack（side=bottom），否则会被 expand 的主体挤出窗口
         self._build_status()
+        self._build_body()
 
         self.protocol("WM_DELETE_WINDOW", self._on_close)
         self.after(80, self._poll_queue)
@@ -85,20 +90,39 @@ class ScanApp(tk.Tk):
         if self.config_obj.warnings:
             self._set_status("；".join(self.config_obj.warnings))
 
+        # 支持「把文件/文件夹拖到 exe 上」或命令行带路径启动
+        existing = [item for item in self._initial_paths if Path(item).exists()]
+        if existing:
+            self.path_var.set(" ; ".join(existing))
+            self.after(350, self._start_scan)
+        elif self._initial_paths:
+            self._set_status("传入的路径不存在：" + "、".join(self._initial_paths))
+
     # ==================================================================
     # 界面构建
     # ==================================================================
+    def _set_window_icon(self) -> None:
+        try:
+            from ..paths import bundle_dir
+
+            icon = bundle_dir() / "assets" / "app.ico"
+            if icon.is_file():
+                self.iconbitmap(default=str(icon))
+        except Exception:  # noqa: BLE001 - 图标缺失不影响使用
+            pass
+
     def _apply_geometry(self) -> None:
-        """按屏幕大小自适应，避免小屏上状态栏被挤到屏幕外。"""
+        """按屏幕大小与 DPI 缩放自适应，避免小屏上状态栏被挤到屏幕外。"""
         try:
             screen_w = self.winfo_screenwidth()
             screen_h = self.winfo_screenheight()
+            scale = max(1.0, self.winfo_fpixels("1i") / 96.0)
         except tk.TclError:
-            screen_w, screen_h = 1280, 800
-        width = min(1320, max(900, screen_w - 80))
-        height = min(840, max(600, screen_h - 90))
+            screen_w, screen_h, scale = 1280, 800, 1.0
+        width = min(int(1320 * scale), max(900, screen_w - 80))
+        height = min(int(800 * scale), max(600, screen_h - 150))
         x = max(0, (screen_w - width) // 2)
-        y = max(0, (screen_h - height) // 2 - 10)
+        y = max(0, (screen_h - height) // 2 - int(10 * scale))
         self.geometry(f"{width}x{height}+{x}+{y}")
 
     def _build_menu(self) -> None:
@@ -222,6 +246,7 @@ class ScanApp(tk.Tk):
             columns=[column[0] for column in COLUMNS],
             show="headings",
             selectmode="browse",
+            height=14,
         )
         for key, title, width, anchor in COLUMNS:
             self.tree.heading(key, text=title, command=lambda k=key: self._sort_by(k))
@@ -247,6 +272,21 @@ class ScanApp(tk.Tk):
         self.detail = DetailView(paned, self.fonts)
         paned.add(table_frame, weight=3)
         paned.add(self.detail, weight=2)
+        self.paned = paned
+        self.after(120, self._place_sash)
+
+    def _place_sash(self, attempt: int = 0) -> None:
+        """给表格和详情一个合理的初始比例（否则表格会被挤成两行）。"""
+        try:
+            height = self.paned.winfo_height()
+            if height < 400 and attempt < 25:
+                # 窗口还没完成布局，等下一轮再试
+                self.after(80, lambda: self._place_sash(attempt + 1))
+                return
+            if height > 240:
+                self.paned.sashpos(0, max(240, int(height * 0.60)))
+        except tk.TclError:
+            pass
 
     def _build_context_menu(self) -> None:
         self.context_menu = tk.Menu(self, tearoff=0)
@@ -265,8 +305,8 @@ class ScanApp(tk.Tk):
         self.tree.bind("<Button-3>", popup)
 
     def _build_status(self) -> None:
-        bar = ttk.Frame(self, padding=(14, 0, 14, 10))
-        bar.pack(fill="x")
+        bar = ttk.Frame(self, padding=(14, 4, 14, 8))
+        bar.pack(side="bottom", fill="x")
         self.status_var = tk.StringVar(value="就绪")
         ttk.Label(bar, textvariable=self.status_var, style="Muted.TLabel").pack(side="left")
         self.progress = ttk.Progressbar(bar, mode="determinate", length=220)
@@ -561,8 +601,16 @@ class ScanApp(tk.Tk):
             self._render_job = self.after(1, self._insert_batch)
         else:
             self._render_job = None
-            if not self.tree.get_children():
+            children = self.tree.get_children()
+            if not children:
                 self.detail._empty()
+                return
+            # 始终从最高分开始显示，并默认选中第一条
+            self.tree.yview_moveto(0)
+            if not self.tree.selection():
+                self.tree.selection_set(children[0])
+                self.tree.focus(children[0])
+                self._on_select()
 
     def _on_select(self, _event=None) -> None:
         selection = self.tree.selection()
@@ -700,10 +748,10 @@ class ScanApp(tk.Tk):
         self.destroy()
 
 
-def run_gui() -> int:
+def run_gui(paths: list[str] | None = None) -> int:
     """启动图形界面；没有 tkinter 时给出提示。"""
     try:
-        app = ScanApp()
+        app = ScanApp(initial_paths=paths)
     except Exception as exc:  # noqa: BLE001
         print(f"无法启动图形界面：{exc}", file=sys.stderr)
         print("可以改用命令行：python -m qqadscan scan <目录>", file=sys.stderr)

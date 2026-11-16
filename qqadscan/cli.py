@@ -206,7 +206,20 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _configure_stdio() -> None:
+    """管道/重定向时改用 UTF-8 输出，避免中文在非 UTF-8 环境里乱码。"""
+    for stream in (sys.stdout, sys.stderr):
+        if stream is None:
+            continue
+        try:
+            if not stream.isatty():
+                stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError, ValueError):
+            pass
+
+
 def main(argv: list[str] | None = None) -> int:
+    _configure_stdio()
     argv = list(sys.argv[1:] if argv is None else argv)
     logging.basicConfig(
         level=logging.INFO if ("-v" in argv or "--verbose" in argv) else logging.WARNING,
