@@ -379,21 +379,6 @@ python -m unittest discover -s tests -v
 
 ---
 
-## 同步到 GitHub
-
-仓库地址：<https://github.com/HK5538/qqadscan>（分支 `main`）。日常更新：
-
-```bash
-git add -A
-git commit -m "feat: 说明这次改了什么"
-git pull --rebase
-git push
-```
-
-每次 push 会触发 GitHub Actions 跑测试；打 `v1.0.0` 之类的标签还会自动构建 exe 并发布 Release。
-
----
-
 ## 边界与已知限制
 
 - 只处理**纯文本**，图片/二维码/压缩包里的群号识别不了；
